@@ -7,6 +7,9 @@
 
 template <typename T>
 class MutableArraySequence : public Sequence<T> {
+private:
+    int size;
+
 protected:
     DynamicArray<T>* items;
 
@@ -39,21 +42,25 @@ public:
 template <typename T>
 MutableArraySequence<T>::MutableArraySequence() {
     items = new DynamicArray<T>(0);
+    size = 0;
 }
 
 template <typename T>
 MutableArraySequence<T>::MutableArraySequence(T* arr, int count) {
     items = new DynamicArray<T>(arr, count);
+    size = count;
 }
 
 template <typename T>
 MutableArraySequence<T>::MutableArraySequence(const MutableArraySequence<T>& other) {
     items = new DynamicArray<T>(*other.items);
+    size = other.size;
 }
 
 template <typename T>
 MutableArraySequence<T>::MutableArraySequence(const DynamicArray<T>& array) {
     items = new DynamicArray<T>(array);
+    size = array.GetSize();
 }
 
 template <typename T>
@@ -80,7 +87,7 @@ T MutableArraySequence<T>::Get(int index) const {
 
 template <typename T>
 int MutableArraySequence<T>::GetLength() const {
-    return items->GetSize();
+    return size;
 }
 
 template <typename T>
@@ -107,30 +114,49 @@ Sequence<T>* MutableArraySequence<T>::Concat(const Sequence<T>* other) const {
 
 template <typename T>
 Sequence<T>* MutableArraySequence<T>::Append(T item) {
-    int size = items->GetSize();
-    items->Resize(size + 1);
+    int capasity = items->GetSize();
+
+    if (size + 1 > capasity) items->Resize(size == 0 ? 10 : size + int(size / 2));
+
     items->Set(size, item);
+
+    size++;
+
     return this;
 }
 
 template <typename T>
 Sequence<T>* MutableArraySequence<T>::Prepend(T item) {
-    int size = items->GetSize();
-    items->Resize(size + 1);
-    for (int i = size; i > 0; i--)
-        items->Set(i, items->Get(i - 1));
-    items->Set(0, item);
+    DynamicArray<T>* tempData = new DynamicArray<T>(size + 1);
+
+    int capasity = items->GetSize();
+
+    if (size + 1 > capasity) items->Resize(size == 0 ? 10 : size + int(size / 2));
+
+    for (int i = 0; i < size; ++i)
+        tempData->Set(i + 1, items->Get(i));
+
+    tempData->Set(0, item);
+
+    delete items;
+    items = tempData;
+
+    size++;
     return this;
 }
 
 template <typename T>
 Sequence<T>* MutableArraySequence<T>::InsertAt(T item, int index) {
-    int size = items->GetSize();
+    
+    int capacity = items->GetSize();
+
     if (index < 0 || index > size) throw Errors::IndexOutOfRange();
-    items->Resize(size + 1);
+
+    if (capacity < size + 1) items->Resize(size == 0 ? 10 : size + int(size / 2));
     for (int i = size; i > index; i--)
         items->Set(i, items->Get(i - 1));
     items->Set(index, item);
+    size++;
     return this;
 }
 
@@ -138,6 +164,7 @@ template <typename T>
 Sequence<T>* MutableArraySequence<T>::Remove(int index) {
     if (items->GetSize() == 0) throw Errors::EmptyArray();
     items->Remove(index);
+    size--;
     return this;
 }
 

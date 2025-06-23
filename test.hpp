@@ -23,7 +23,6 @@ void DynamicArrayTest() {
 
     arr.Resize(5);
     assert(arr.GetSize() == 5);
-    assert(arr.GetCapacity() == 5);
 
     arr.Resize(2);
     DynamicArray<int> expected2(2);

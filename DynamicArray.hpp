@@ -8,7 +8,6 @@ class DynamicArray {
 private:
     T* data;
     int size;
-    int capacity;
 
 public:
     DynamicArray(T* items, int count);
@@ -16,11 +15,8 @@ public:
     DynamicArray(const DynamicArray<T>& arr);
     ~DynamicArray();
 
-    void EnsureCapacity(int newCapacity);
-
     T Get(int index) const;
     int GetSize() const;
-    int GetCapacity() const;
 
     void Remove(int index);
 
@@ -38,7 +34,6 @@ DynamicArray<T>::DynamicArray(T* items, int count) {
     if (count < 0) throw Errors::NegativeSize();
 
     size = count;
-    capacity = count;
 
     data = new T[size];
     for (int i = 0; i < size; i++)
@@ -49,7 +44,6 @@ template <class T>
 DynamicArray<T>::DynamicArray(int size) {
     if (size < 0) throw Errors::NegativeSize();
 
-    this->capacity = size;
     this->size = size;
     data = new T[size];
 }
@@ -57,7 +51,6 @@ DynamicArray<T>::DynamicArray(int size) {
 template <class T>
 DynamicArray<T>::DynamicArray(const DynamicArray<T>& arr) {
     size = arr.size;
-    capacity = arr.capacity;
     data = new T[size];
     for (int i = 0; i < size; i++)
         data[i] = arr.data[i];
@@ -66,20 +59,6 @@ DynamicArray<T>::DynamicArray(const DynamicArray<T>& arr) {
 template <class T>
 DynamicArray<T>::~DynamicArray() {
     delete[] data;
-}
-
-template <class T>
-void DynamicArray<T>::EnsureCapacity(int newCapacity) {
-    if (newCapacity < 0) throw Errors::NegativeSize();
-
-    if (newCapacity > capacity) {
-        T* newData = new T[newCapacity];
-        for (int i = 0; i < size; i++)
-            newData[i] = data[i];
-        delete[] data;
-        data = newData;
-        capacity = newCapacity;
-    }
 }
 
 template <class T>
@@ -96,20 +75,21 @@ int DynamicArray<T>::GetSize() const {
 }
 
 template <class T>
-int DynamicArray<T>::GetCapacity() const {
-
-    return capacity;
-}
-
-template <class T>
 void DynamicArray<T>::Remove(int index) {
     if (size == 0) return;
 
     if (index < 0 || index >= size) throw Errors::IndexOutOfRange();
 
-    for (int i = index; i < size - 1; ++i) {
-        data[i] = data[i + 1];
-    }
+    T* newData = new T[size - 1];
+
+    for (int i = 0; i < index; ++i)
+        newData[i] = data[i];
+
+    for (int i = index + 1; i < size; ++i)
+        newData[i] = data[i];
+
+    delete[] data;
+    data = newData;
 
     size--;
 }
@@ -124,7 +104,13 @@ template <class T>
 void DynamicArray<T>::Resize(int newSize) {
     if (newSize < 0) throw Errors::NegativeSize();
 
-    if (newSize > capacity) EnsureCapacity(newSize);
+    T* newData = new T[newSize];
+
+    for (int i = 0; i < newSize; ++i)
+        newData[i] = data[i];
+
+    delete[] data;
+    data = newData;
 
     size = newSize;
 }
